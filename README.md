@@ -1,2 +1,8 @@
-# Ai_lead_qualification_n8n
-AI‑based lead qualification: chat input → AI Agent scoring → Google Sheets CRM → Telegram alerts for hot leads
+Автоматизация оценки лидов:
+
+- Вход: сообщение из n8n Chat для демонстрация. Возможна замена на любой webhook.
+- AI Agent парсит текст и считает score (0–100). Основание - бюджет, наполнение и сроки. 
+- Запись лида в Google Sheets.
+- Если статус HOT (Score 80+ - сообщение в Telegram рук.) иначе - сообщение продажнику.
+
+Результаты: | Скорость ~ 7 секунд | Цена ~ 700 токенов ChatGPT (0.00026$)

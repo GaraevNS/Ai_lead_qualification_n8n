@@ -1,0 +1,330 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -224,
+        -32
+      ],
+      "id": "4ebe823f-fdb0-44b2-abcb-9bd0a852e547",
+      "name": "When chat message received",
+      "webhookId": "d715dc08-f197-4e65-a05e-0c6f5637bcd6"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "Ты парсер лидов. Извлеки ТОЛЬКО JSON, НИЧЕГО лишнего!\n\nВход: \"{{ $json.chatInput }}\"\n\n🎯 ШАГ 1: Разбери текст на поля:\n- name (имя/ФИО)\n- email (почта) \n- company (компания)\n- budget (бюджет)\n- message (сообщение)\n\n🎯 ШАГ 2: ОЦЕНИ лид по шкале БЮДЖЕТА:\n| Бюджет | Score | Status |\n|--------|-------|--------|\n| бесплатно | 0-20 | cold |\n| до 100к | 20-40 | cold |\n| до 300к | 40-60 | warm |\n| до 500к | 60-80 | warm |\n| от 500к+ | 80-100 | hot |\n\n📊 ДОПОЛНИТЕЛЬНЫЕ БАЛЛЫ (+10-20):\n- ✅ B2B/корпоративный клиент\n- ✅ Срочный проект (\"срочно\", \"завтра\")  \n- ✅ Чёткий запрос (CRM, разработка, интеграция)\n\n🔻 МИНУС БАЛЛЫ (-10-20):\n- ❌ Фриланс/стартап\n- ❌ \"посмотрите КП\", \"цена?\"\n- ❌ Низкий бюджет\n\n🎯 ШАГ 3: ВЕРНИ ТОЛЬКО JSON:\n{\n  \"name\": \"имя\",\n  \"email\": \"email\", \n  \"company\": \"компания\",\n  \"budget\": \"бюджет\",\n  \"message\": \"сообщение\", \n  \"ai_score\": ЧИСЛО_0_100,\n  \"ai_status\": \"hot|warm|cold\",\n  \"ai_summary\": \"1 предложение\"\n}\n\n📋 ПРИМЕРЫ:\n\"Иван, test@mail.ru, ООО Ромашка, 750к, CRM срочно\"\n→ {\"name\":\"Иван\",\"email\":\"test@mail.ru\",\"company\":\"ООО Ромашка\",\"budget\":\"750к\",\"message\":\"CRM срочно\",\"ai_score\":95,\"ai_status\":\"hot\",\"ai_summary\":\"B2B горячий лид, большой бюджет + срочность\"}\n\n\"Алексей, alexey@gmail.com, фриланс, бесплатно, есть ли CRM?\"\n→ {\"name\":\"Алексей\",\"email\":\"alexey@gmail.com\",\"company\":\"фриланс\",\"budget\":\"бесплатно\",\"message\":\"есть ли CRM?\",\"ai_score\":10,\"ai_status\":\"cold\",\"ai_summary\":\"Бесплатный фриланс\"}\n\n\"Мария, maria@test.ru, стартап, до 200к, посмотрите КП\"\n→ {\"name\":\"Мария\",\"email\":\"maria@test.ru\",\"company\":\"стартап\",\"budget\":\"до 200к\",\"message\":\"посмотрите КП\",\"ai_score\":45,\"ai_status\":\"warm\",\"ai_summary\":\"Стартап со средним бюджетом\"}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -16,
+        -32
+      ],
+      "id": "6f78f2dd-b24d-48ae-ae97-eac57ad39c71",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-4o-mini",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -16,
+        176
+      ],
+      "id": "39a38426-c95a-4885-8d61-159df9a37ae1",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "2oKuQll8wItdgMhr",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "13XkCvBkcCvLu6lBzhwKGn3LTlM8xUzkispG5ax3SFD8",
+          "mode": "list",
+          "cachedResultName": "AI Lead Qualification CRM",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13XkCvBkcCvLu6lBzhwKGn3LTlM8xUzkispG5ax3SFD8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Лист1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13XkCvBkcCvLu6lBzhwKGn3LTlM8xUzkispG5ax3SFD8/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "name": "={{ $json.Name }}",
+            "email": "={{ $json.Email }}",
+            "company": "={{ $json.Company }}",
+            "budget": "={{ $json.Budget }}",
+            "message": "={{ $json.Message }}",
+            "ai_score": "={{ $json['AI Score'] }}",
+            "ai_status": "={{ $json['AI Status'] }}",
+            "ai_summary": "={{ $json['AI Summary'] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "budget",
+              "displayName": "budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ai_score",
+              "displayName": "ai_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ai_status",
+              "displayName": "ai_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ai_summary",
+              "displayName": "ai_summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        560,
+        -32
+      ],
+      "id": "86e2f727-ba68-4f9a-8549-67578de66efa",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Bazl8b7MjNrA0bcF",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "3bcdb0b7-a595-4196-afc7-d969cfe11b77",
+              "leftValue": "={{ $json.ai_status }}",
+              "rightValue": "=hot",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        768,
+        -32
+      ],
+      "id": "bce51102-bedf-4ab1-970b-c045005fa7df",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "chatId": "577524692",
+        "text": "=🔥 ГОРЯЧИЙ ЛИД! 🔥  👤 {{ $json.name }} 📧 {{ $json.email }}  🏢 {{ $json.company }} 💰 {{ $json.budget }}  ⭐️ AI Score: {{ $json.ai_score }}/100 📝 Резюме: {{ $json.ai_summary }} ",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1024,
+        -64
+      ],
+      "id": "348704b8-08e0-42a9-b3d7-3c3dda2efe6e",
+      "name": "Send a text message",
+      "webhookId": "a2d4700e-cf96-4a5b-b269-a877cc122c92",
+      "executeOnce": false,
+      "notesInFlow": false,
+      "credentials": {
+        "telegramApi": {
+          "id": "wRrf0J9LPck5jWXy",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Берём строку из поля output\nconst raw = $input.first().json.output;\n\n// Если это строка, парсим её в объект\nlet inputData;\n\ntry {\n    inputData = typeof raw === \"string\" ? JSON.parse(raw) : raw;\n} catch (e) {\n    throw new Error(\"Не удалось распарсить JSON: \" + e.message);\n}\n\n// Формируем новый объект с нужными полями\nconst outputData = {\n    \"Name\": inputData.name || \"\",\n    \"Email\": inputData.email || \"\",\n    \"Company\": inputData.company || \"\",\n    \"Budget\": inputData.budget || \"\",\n    \"Message\": inputData.message || \"\",\n    \"AI Score\": inputData.ai_score || \"\",\n    \"AI Status\": inputData.ai_status || \"\",\n    \"AI Summary\": inputData.ai_summary || \"\"\n};\n\n// Возвращаем как массив объектов\nreturn [{\n    json: outputData\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        336,
+        -32
+      ],
+      "id": "f5324509-e347-4ebd-b68f-5ac92a045706",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "a333d038-bbfb-4530-b822-acf8aaa29f67",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e3dc6f57c64420e7a694b297041263dd276565ee1e9a796bd9fc135fe11c3b8f"
+  },
+  "id": "p9p1UYLpD4nsZfuD",
+  "tags": []
+}
